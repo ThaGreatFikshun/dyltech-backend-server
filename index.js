@@ -4,10 +4,10 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const path = require('path');
 const expressValidator = require('express-validator');
 require('dotenv').config();
-// import routes
+
+// Import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const categoryRoutes = require('./routes/category');
@@ -15,28 +15,38 @@ const productRoutes = require('./routes/product');
 const braintreeRoutes = require('./routes/braintree');
 const orderRoutes = require('./routes/order');
 
-// app
+// App
 const app = express();
 
-// db connection
+// DB connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
     console.log('MongoDB Connected');
   } catch (err) {
-    console.error(err.message);
+    console.error('MongoDB connection failed:', err.message);
+    process.exit(1); // Exit the process with failure code
   }
 };
+
 connectDB();
 
-// middlewares
+// Middlewares
 app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(expressValidator());
 app.use(cors());
 
-// routes middleware
+// Define root route
+app.get('/', (req, res) => {
+  res.send('Welcome to the Dyltech API!');
+});
+
+// Routes middleware
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', categoryRoutes);
@@ -44,16 +54,12 @@ app.use('/api', productRoutes);
 app.use('/api', braintreeRoutes);
 app.use('/api', orderRoutes);
 
-// Server static assets if in production
-if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static('frontend/build'));
+// Handle unknown routes (fallback)
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
 
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'frontend', 'build', 'index.html'));
-  });
-}
-
+// Start server
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
