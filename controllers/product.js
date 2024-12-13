@@ -25,6 +25,49 @@ exports.read = (req, res) => {
 };
 
 // Create a new product
+// exports.create = async (req, res) => {
+//   const form = new formidable.IncomingForm();
+//   form.keepExtensions = true;
+
+//   form.parse(req, async (err, fields, files) => {
+//     if (err) {
+//       return res.status(400).json({ error: 'Image could not be uploaded' });
+//     }
+
+//     const { name, description, price, category, quantity, shipping } = fields;
+
+//     if (
+//       !name ||
+//       !description ||
+//       !price ||
+//       !category ||
+//       !quantity ||
+//       !shipping
+//     ) {
+//       return res.status(400).json({ error: 'All fields are required' });
+//     }
+
+//     let product = new Product(fields);
+
+//     if (files.photo) {
+//       if (files.photo.size > 1000000) {
+//         return res
+//           .status(400)
+//           .json({ error: 'Image should be less than 1MB in size' });
+//       }
+//       product.photo.data = fs.readFileSync(files.photo.path);
+//       product.photo.contentType = files.photo.type;
+//     }
+
+//     try {
+//       const result = await product.save();
+//       res.json(result);
+//     } catch (error) {
+//       return res.status(400).json({ error: errorHandler(error) });
+//     }
+//   });
+// };
+// Create a new product
 exports.create = async (req, res) => {
   const form = new formidable.IncomingForm();
   form.keepExtensions = true;
@@ -50,11 +93,7 @@ exports.create = async (req, res) => {
     let product = new Product(fields);
 
     if (files.photo) {
-      if (files.photo.size > 1000000) {
-        return res
-          .status(400)
-          .json({ error: 'Image should be less than 1MB in size' });
-      }
+      // No size validation here; image can be any size
       product.photo.data = fs.readFileSync(files.photo.path);
       product.photo.contentType = files.photo.type;
     }
@@ -68,16 +107,39 @@ exports.create = async (req, res) => {
   });
 };
 
+
+// Delete a product
+// exports.remove = async (req, res) => {
+//   try {
+//     let product = req.product;
+//     await product.remove();
+//     res.json({ message: 'Product deleted successfully' });
+//   } catch (err) {
+//     return res.status(400).json({ error: errorHandler(err) });
+//   }
+// };
 // Delete a product
 exports.remove = async (req, res) => {
   try {
+    // Check if the product exists
     let product = req.product;
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Remove the product
     await product.remove();
-    res.json({ message: 'Product deleted successfully' });
+
+    // Send a success response
+    res.json({ message: 'Product deleted successfully', productId: product._id });
   } catch (err) {
-    return res.status(400).json({ error: errorHandler(err) });
+    // Log and handle the error more specifically
+    console.error('Error deleting product:', err);
+    return res.status(500).json({ error: 'Error deleting the product. Please try again.' });
   }
 };
+
 
 // Update a product
 exports.update = async (req, res) => {
