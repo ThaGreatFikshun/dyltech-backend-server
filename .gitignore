@@ -14,9 +14,9 @@ package-lock.json
 # Environment variables
 .env.local
 .env.*.local
-
+.env
 # Build output
-dist/
+build/
 
 # Editor directories and files
 .vscode/*
@@ -28,3 +28,4 @@ dist/
 *.njsproj
 *.sln
 *.sw?
+.vercel
